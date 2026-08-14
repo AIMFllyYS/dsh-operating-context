@@ -43,7 +43,7 @@ From this plugin's checkout:
 
 ```sh
 pnpm install
-pnpm build
+pnpm bundle
 npx @deepseek-ai/dsh plugin --profile web add .
 ```
 
@@ -83,15 +83,15 @@ the removal is never attempted when the catalog is unknown.
 
 If an older revision fails during a Git install with a frozen-lockfile,
 `autoInstallPeers`, or `allowBuilds` message, do not change the consumer
-profile's pnpm policy to make that revision compile. Those errors came from the
-old install-time `prepare` build inheriting the parent profile workspace's pnpm
-settings. Install a current commit instead: current revisions contain the
-compiled `lib/` files and define no install lifecycle hook.
+profile's pnpm policy to make that revision compile. Git package managers treat
+`build`, `prepare`, `prepack`, `preinstall`, `install`, and `postinstall` as
+signals that a repository must be built before installation. Current revisions
+contain the compiled `lib/` files and define none of those Git build triggers.
 
 You can verify a checkout before installing it:
 
 ```sh
-node -e "const p=require('./package.json'); if (p.scripts?.prepare) process.exit(1)"
+node -e "const p=require('./package.json'); for (const s of ['build','prepare','prepack','preinstall','install','postinstall']) if (p.scripts?.[s]) process.exit(1)"
 test -f lib/index.js && test -f lib/client.js && test -f lib/client.js.map
 ```
 
@@ -99,14 +99,15 @@ On PowerShell, use:
 
 ```powershell
 $p = Get-Content -Raw package.json | ConvertFrom-Json
-if ($p.scripts.prepare) { throw 'prepare must not be present' }
+foreach ($name in 'build','prepare','prepack','preinstall','install','postinstall') {
+  if ($p.scripts.$name) { throw "$name must not be present in a Git-distributed package" }
+}
 Get-Item lib/index.js, lib/client.js, lib/client.js.map
 ```
 
-The package's local `.npmrc` keeps optional Harness peers out of standalone
-development installs. npm may warn that these are pnpm-only project settings;
-that warning is unrelated to plugin installation and pnpm remains the supported
-development package manager.
+The package's local `pnpm-workspace.yaml` keeps optional Harness peers out of
+standalone development installs. pnpm remains the supported development package
+manager.
 
 ## What it writes
 
@@ -134,7 +135,7 @@ When the chosen window is at or below a model's ceiling, no override is written 
 pnpm install
 pnpm typecheck
 pnpm test
-pnpm build
+pnpm bundle
 npm pack --dry-run
 ```
 

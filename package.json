@@ -41,7 +41,7 @@
     }
   },
   "scripts": {
-    "build": "tsdown",
+    "bundle": "tsdown",
     "typecheck": "tsc --noEmit",
     "test": "node --experimental-strip-types --test tests/capacity.test.ts tests/ceiling.test.ts tests/distribution.test.ts tests/failure.test.ts tests/locales.test.ts tests/plan.test.ts tests/write.test.ts"
   },
@@ -78,14 +78,6 @@
     "lightningcss": "^1.32.0",
     "tsdown": "^0.22.2",
     "typescript": "^5.9.2"
-  },
-  "pnpm": {
-    "peerDependencyRules": {
-      "ignoreMissing": [
-        "@deepseek-ai/*",
-        "react"
-      ]
-    }
   },
   "keywords": [
     "dsh-plugin",

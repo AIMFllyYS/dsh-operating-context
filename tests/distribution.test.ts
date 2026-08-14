@@ -18,8 +18,8 @@ test('the installable package ships artifacts without lifecycle builds', async (
     dsh?: { client?: { inject?: string[] } }
   }
 
-  for (const hook of ['preinstall', 'install', 'postinstall', 'prepare']) {
-    assert.equal(manifest.scripts?.[hook], undefined, `${hook} must not run for consumers`)
+  for (const trigger of ['build', 'prepare', 'prepack', 'preinstall', 'install', 'postinstall']) {
+    assert.equal(manifest.scripts?.[trigger], undefined, `${trigger} must not trigger a Git dependency build`)
   }
   assert.match(await text('CHANGELOG.md'), new RegExp(`^## ${manifest.version?.replaceAll('.', '\\.')}(?: -|$)`, 'm'))
   assert.deepEqual(manifest.files, [

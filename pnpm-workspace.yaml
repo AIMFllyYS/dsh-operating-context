@@ -1,0 +1,10 @@
+packages:
+  - .
+
+autoInstallPeers: false
+strictPeerDependencies: false
+
+peerDependencyRules:
+  ignoreMissing:
+    - '@deepseek-ai/*'
+    - react

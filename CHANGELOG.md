@@ -9,9 +9,11 @@ repository state prepared for that release.
 ### Fixed
 
 - Ship reviewed `lib/index.js`, `lib/client.js`, and `lib/client.js.map`
-  artifacts and remove the install-time `prepare` build. Git consumers no
-  longer need to modify `allowBuilds`, and parent workspace lock settings no
-  longer participate in compiling this plugin.
+  artifacts and remove every Git dependency build trigger (`build`, `prepare`,
+  `prepack`, `preinstall`, `install`, and `postinstall`). The local development
+  command is now `pnpm bundle`; Git consumers no longer need to modify
+  `allowBuilds`, and parent workspace lock settings no longer participate in
+  compiling this plugin.
 - Reload authoritative settings after every namespace-scoped write attempt.
   A partial multi-namespace commit now reports completed batches instead of
   leaving a stale pre-write snapshot or implying rollback.

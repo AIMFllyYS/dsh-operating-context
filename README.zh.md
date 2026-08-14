@@ -42,7 +42,7 @@ pnpm dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context
 
 ```sh
 pnpm install
-pnpm build
+pnpm bundle
 npx @deepseek-ai/dsh plugin --profile web add .
 ```
 
@@ -75,12 +75,12 @@ npx @deepseek-ai/dsh plugin --profile web remove dsh-operating-context
 ## 安装故障排查
 
 如果旧版本通过 Git 安装时出现 frozen lockfile、`autoInstallPeers` 或
-`allowBuilds` 报错，不要通过修改使用者 profile 的 pnpm 策略来强行编译那个旧版本。真正原因是旧版安装期 `prepare` 构建继承了父级 profile workspace 的 pnpm 设置。请改为安装当前 commit：当前版本已经包含编译好的 `lib/`，也没有任何安装生命周期脚本。
+`allowBuilds` 报错，不要通过修改使用者 profile 的 pnpm 策略来强行编译那个旧版本。Git 包管理器会把 `build`、`prepare`、`prepack`、`preinstall`、`install` 和 `postinstall` 中任意一个脚本视为“需要在安装前构建”的信号。当前版本已经包含编译好的 `lib/`，并且没有定义这些 Git 构建触发脚本。
 
 安装前可以在 checkout 中检查：
 
 ```sh
-node -e "const p=require('./package.json'); if (p.scripts?.prepare) process.exit(1)"
+node -e "const p=require('./package.json'); for (const s of ['build','prepare','prepack','preinstall','install','postinstall']) if (p.scripts?.[s]) process.exit(1)"
 test -f lib/index.js && test -f lib/client.js && test -f lib/client.js.map
 ```
 
@@ -88,12 +88,14 @@ PowerShell 使用：
 
 ```powershell
 $p = Get-Content -Raw package.json | ConvertFrom-Json
-if ($p.scripts.prepare) { throw 'prepare must not be present' }
+foreach ($name in 'build','prepare','prepack','preinstall','install','postinstall') {
+  if ($p.scripts.$name) { throw "$name must not be present in a Git-distributed package" }
+}
 Get-Item lib/index.js, lib/client.js, lib/client.js.map
 ```
 
-本包的本地 `.npmrc` 用于避免单独开发时自动安装可选的 Harness peer。npm
-可能提示这些是 pnpm 专用项目设置；这条提示与插件安装失败无关，项目开发仍以 pnpm 为准。
+本包的本地 `pnpm-workspace.yaml` 用于避免单独开发时自动安装可选的
+Harness peer；项目开发仍以 pnpm 为准。
 
 ## 它写什么
 
@@ -121,7 +123,7 @@ Get-Item lib/index.js, lib/client.js, lib/client.js.map
 pnpm install
 pnpm typecheck
 pnpm test
-pnpm build
+pnpm bundle
 npm pack --dry-run
 ```
 
