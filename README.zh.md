@@ -59,6 +59,8 @@ npx @deepseek-ai/dsh web                           # 仍是 3080 端口
 
 选一个大小并应用。模型、用量环和官方自动整理会通过设置事件跟着变。
 
+一次应用可能跨越多个设置命名空间，而 Harness 的写入以单个命名空间为单位，并不是跨命名空间事务。如果前面的批次已经成功、后面的批次失败，页面会明确显示实际完成的批次数，并重新读取权威设置状态；不会把部分写入说成已经回滚，也不会继续展示写入前的旧快照。
+
 卸载：
 
 ```sh
@@ -69,6 +71,29 @@ npx @deepseek-ai/dsh plugin --profile web remove dsh-operating-context
 
 如果权威目录已经不存在某个模型，但配置里还留着它的 `modelOverrides`
 条目，适配器会拒绝这个旧条目，并可能导致整条路由不可用。页面会在应用前明确显示将清理多少个这类条目；目录上限未知时绝不会执行这项清理。
+
+## 安装故障排查
+
+如果旧版本通过 Git 安装时出现 frozen lockfile、`autoInstallPeers` 或
+`allowBuilds` 报错，不要通过修改使用者 profile 的 pnpm 策略来强行编译那个旧版本。真正原因是旧版安装期 `prepare` 构建继承了父级 profile workspace 的 pnpm 设置。请改为安装当前 commit：当前版本已经包含编译好的 `lib/`，也没有任何安装生命周期脚本。
+
+安装前可以在 checkout 中检查：
+
+```sh
+node -e "const p=require('./package.json'); if (p.scripts?.prepare) process.exit(1)"
+test -f lib/index.js && test -f lib/client.js && test -f lib/client.js.map
+```
+
+PowerShell 使用：
+
+```powershell
+$p = Get-Content -Raw package.json | ConvertFrom-Json
+if ($p.scripts.prepare) { throw 'prepare must not be present' }
+Get-Item lib/index.js, lib/client.js, lib/client.js.map
+```
+
+本包的本地 `.npmrc` 用于避免单独开发时自动安装可选的 Harness peer。npm
+可能提示这些是 pnpm 专用项目设置；这条提示与插件安装失败无关，项目开发仍以 pnpm 为准。
 
 ## 它写什么
 
@@ -97,8 +122,11 @@ pnpm install
 pnpm typecheck
 pnpm test
 pnpm build
+npm pack --dry-run
 ```
 
 `src/index.ts` 是 Host 侧的 loader stub；行为都在客户端 bundle 里。`api.ts`、`capacity.ts`、`ceiling.ts`、`plan.ts` 是纯逻辑并承担测试；只有 `store.ts` 和组件会碰到平台模块。
 
 `lib/` 是需要提交的分发产物。修改 `src/` 后必须重新构建，并在同一个 commit 中包含 `lib/index.js`、`lib/client.js` 和 `lib/client.js.map`。使用者不应再承担任何安装期构建。
+
+发布或推送候选版本前，应执行上述检查。如果改动过构建工具，再连续构建两次，并确认第二次构建后 `git status` 仍然干净。CSS Modules 的导出映射会主动排序，因此相同源码应生成字节完全一致的客户端产物。

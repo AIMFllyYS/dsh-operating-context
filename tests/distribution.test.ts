@@ -21,6 +21,7 @@ test('the installable package ships artifacts without lifecycle builds', async (
     assert.equal(manifest.scripts?.[hook], undefined, `${hook} must not run for consumers`)
   }
   assert.deepEqual(manifest.files, [
+    'CHANGELOG.md',
     'lib/index.js',
     'lib/client.js',
     'lib/client.js.map',

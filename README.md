@@ -60,6 +60,12 @@ After install, open **Settings → 工作窗口** (between Models and Plugins). 
 
 Pick a size and apply. Models, the usage ring, and official auto-compact follow through the settings event.
 
+An apply can span more than one settings namespace, while Harness mutations
+are namespace-scoped rather than one cross-namespace transaction. If a later
+batch fails after an earlier one committed, the page reports the exact completed
+batch count and reloads the authoritative settings state. It never presents a
+partial write as a rollback or leaves the pre-write snapshot on screen.
+
 Unload:
 
 ```sh
@@ -72,6 +78,35 @@ If an authoritative catalog no longer contains a model that still has a
 `modelOverrides` entry, the adapter rejects that stale entry and can take down
 the whole route. The page reports how many such entries an apply will remove;
 the removal is never attempted when the catalog is unknown.
+
+## Troubleshooting installation
+
+If an older revision fails during a Git install with a frozen-lockfile,
+`autoInstallPeers`, or `allowBuilds` message, do not change the consumer
+profile's pnpm policy to make that revision compile. Those errors came from the
+old install-time `prepare` build inheriting the parent profile workspace's pnpm
+settings. Install a current commit instead: current revisions contain the
+compiled `lib/` files and define no install lifecycle hook.
+
+You can verify a checkout before installing it:
+
+```sh
+node -e "const p=require('./package.json'); if (p.scripts?.prepare) process.exit(1)"
+test -f lib/index.js && test -f lib/client.js && test -f lib/client.js.map
+```
+
+On PowerShell, use:
+
+```powershell
+$p = Get-Content -Raw package.json | ConvertFrom-Json
+if ($p.scripts.prepare) { throw 'prepare must not be present' }
+Get-Item lib/index.js, lib/client.js, lib/client.js.map
+```
+
+The package's local `.npmrc` keeps optional Harness peers out of standalone
+development installs. npm may warn that these are pnpm-only project settings;
+that warning is unrelated to plugin installation and pnpm remains the supported
+development package manager.
 
 ## What it writes
 
@@ -100,8 +135,14 @@ pnpm install
 pnpm typecheck
 pnpm test
 pnpm build
+npm pack --dry-run
 ```
 
 `src/index.ts` is a Host loader stub; all behavior is in the client bundle. `api.ts`, `capacity.ts`, `ceiling.ts`, and `plan.ts` are pure and carry the tests; `store.ts` and the components are the only files that touch platform modules.
 
 `lib/` is a committed distribution artifact. After changing `src/`, rebuild it and include the resulting `lib/index.js`, `lib/client.js`, and `lib/client.js.map` in the same commit. Consumers must never need an install-time build script.
+
+Before publishing or pushing a release candidate, run the commands above twice
+if build tooling changed and confirm the second build leaves `git status`
+clean. The CSS module export map is sorted deliberately so identical sources
+produce byte-identical client artifacts.
