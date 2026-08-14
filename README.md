@@ -6,7 +6,8 @@ Settings page **工作窗口** for [DeepSeek Harness](https://github.com/deepsee
 
 It does **not** mount a second compaction engine, wrap `resolveModel`, or patch adapter config through a bundle patch (a patch replaces the whole row and would wipe keys and endpoints). Everything goes through `settings.mutate` in the user layer.
 
-GitHub topic: [`dsh-plugin`](https://github.com/topics/dsh-plugin).
+GitHub topics: [`dsh-plugin`](https://github.com/topics/dsh-plugin) and
+[`dsh`](https://github.com/topics/dsh).
 
 Compatibility baseline: reviewed against DeepSeek Harness `0.1.0-rc.5`
 (`47f943859bef60e4160492346772ded9b24f765a`, 2026-08-14). The Harness plugin
@@ -24,10 +25,13 @@ A first-time user needs:
 3. Then the commands below. First `npx @deepseek-ai/dsh web` also creates the `web` profile.
 
 ```sh
-npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context
+npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context#v0.1.0
 ```
 
-The repository ships reviewed, prebuilt `lib/` artifacts. Installation does not run package code or require an `allowBuilds` entry. Pin a commit if you do not want a later push to change what runs:
+The stable tag above is the recommended install target. The repository ships
+reviewed, prebuilt `lib/` artifacts, so installation does not run package code
+or require an `allowBuilds` entry. To test the latest unreleased source instead,
+omit `#v0.1.0`; for an immutable development snapshot, pin its commit:
 
 ```sh
 npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context#<sha>
@@ -36,7 +40,7 @@ npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-con
 From a DeepSeek Harness source checkout, the same verbs go through `pnpm dsh` instead of `npx`:
 
 ```sh
-pnpm dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context
+pnpm dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context#v0.1.0
 ```
 
 From this plugin's checkout:

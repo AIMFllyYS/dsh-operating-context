@@ -4,6 +4,28 @@ All notable changes to this project are documented here. The project follows
 the version declared in `package.json`; a dated version heading records the
 repository state prepared for that release.
 
+## 0.1.0 - 2026-08-14
+
+### Stable release
+
+- Promote the tested `0.1.0-rc.3` code to the first stable release. The
+  maintainer's Web UI acceptance confirmed that applying a working window
+  drives the expected context-management path.
+- Recommend the immutable `v0.1.0` Git tag for Git-hosted installation.
+- Publish the reviewed, prebuilt `lib/` artifacts without lifecycle build
+  scripts, so consumers do not need to change pnpm `allowBuilds` policy.
+
+### Included fixes and compatibility
+
+- Preserve a saved 400K or custom selection across Settings section remounts,
+  while still showing lower native limits for models that are clamped.
+- Keep planning provider-agnostic through Harness route metadata; regression
+  coverage includes OpenCode, Kimi Coding, Anthropic, and a hand-declared
+  Anthropic-compatible gateway.
+- Retain explicit endpoint, credential, protocol, model, output-limit, and
+  unknown provider fields while updating context-window settings.
+- Pass all 39 unit and distribution tests for the stable release candidate.
+
 ## 0.1.0-rc.3 - 2026-08-14
 
 ### Fixed

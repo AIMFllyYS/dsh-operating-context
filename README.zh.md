@@ -6,7 +6,8 @@
 
 它**不会**再挂一套压缩引擎、不会包装 `resolveModel`，也不会用 bundle patch 去改适配器配置（那种 patch 会整行替换，密钥和接入点会被清掉）。全部通过用户层的 `settings.mutate` 写入。
 
-GitHub 话题：[`dsh-plugin`](https://github.com/topics/dsh-plugin)。
+GitHub 话题：[`dsh-plugin`](https://github.com/topics/dsh-plugin) 和
+[`dsh`](https://github.com/topics/dsh)。
 
 兼容性基线：已按 DeepSeek Harness `0.1.0-rc.5`
 （`47f943859bef60e4160492346772ded9b24f765a`，2026-08-14）核对。Harness
@@ -23,10 +24,13 @@ GitHub 话题：[`dsh-plugin`](https://github.com/topics/dsh-plugin)。
 3. 然后执行下面的命令。第一次 `npx @deepseek-ai/dsh web` 也会创建 `web` profile。
 
 ```sh
-npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context
+npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context#v0.1.0
 ```
 
-仓库已经提交经过审查的预构建 `lib/` 产物。安装时不会执行本包代码，也不需要修改 `allowBuilds`。不想让后续推送悄悄改变正在运行的内容，就钉死 commit：
+上面的正式标签是推荐安装目标。仓库已经提交经过审查的预构建 `lib/`
+产物，安装时不会执行本包代码，也不需要修改 `allowBuilds`。如果想体验
+尚未发布的最新源码，可以去掉 `#v0.1.0`；若要固定某个开发快照，则钉死
+它的 commit：
 
 ```sh
 npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context#<sha>
@@ -35,7 +39,7 @@ npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-con
 如果是从 DeepSeek Harness 源码 checkout 运行，把上面的 `npx @deepseek-ai/dsh` 换成 `pnpm dsh`：
 
 ```sh
-pnpm dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context
+pnpm dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context#v0.1.0
 ```
 
 从本插件的 checkout 安装：
