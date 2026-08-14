@@ -1,5 +1,7 @@
 # dsh-operating-context
 
+English | [中文](README.zh.md)
+
 Settings page **工作窗口** for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). It caps every configured model service to one working context window — the same `contextWindow` the adapter, the ContextMeter, and official compaction already read — and never asks a model to hold more than it can.
 
 It does **not** mount a second compaction engine, wrap `resolveModel`, or patch adapter config through a bundle patch (a patch replaces the whole row and would wipe keys and endpoints). Everything goes through `settings.mutate` in the user layer.
