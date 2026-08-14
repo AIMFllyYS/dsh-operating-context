@@ -26,6 +26,19 @@ test('only a catalog-backed pi-ai route can be interrogated without a network ca
   assert.equal(hasDiscoverableCeilings(route('llm-deepseek')), false)
 })
 
+test('catalog discovery is provider-name agnostic across shipped providers', () => {
+  for (const provider of ['opencode', 'kimi-coding', 'anthropic']) {
+    assert.equal(hasDiscoverableCeilings({
+      provider,
+      displayName: provider,
+      settingsNs: 'llm-pi-ai',
+      settingsPath: ['providers', provider],
+      active: true,
+      declared: false,
+    }), true, `${provider} should use the installed local catalog`)
+  }
+})
+
 test('ceilingsOf keeps only usable disclosed capacities', () => {
   const ceilings = ceilingsOf([
     { id: 'a', contextWindow: 1_000_000 },

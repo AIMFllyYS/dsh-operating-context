@@ -27,7 +27,7 @@ export const zh = {
   customPlaceholder: '例如 128K',
   customInvalid: '请填写一个正整数，例如 128K、256K 或 131072。',
 
-  current: '当前 {window}',
+  current: '当前选择 {window}',
   mixed: '各模型当前的窗口并不一致。选一个大小并应用即可统一。',
   noRoutes: '还没有配置模型服务。请先在「模型」页添加一个。',
   readOnly: '当前部署不允许修改设置。',
@@ -67,7 +67,7 @@ export const en = {
   customPlaceholder: 'e.g. 128K',
   customInvalid: 'Enter a positive count, like 128K, 256K, or 131072.',
 
-  current: 'Currently {window}',
+  current: 'Selected {window}',
   mixed: 'Models do not agree on a window right now. Pick a size and apply to align them.',
   noRoutes: 'No model services configured yet. Add one on the Models page first.',
   readOnly: 'This deployment does not allow changing settings.',

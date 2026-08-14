@@ -66,6 +66,28 @@ function ceilingMap(entry: RouteProfile): ReadonlyMap<string, number> {
 }
 
 /**
+ * Recover the operating window last chosen through this page.
+ *
+ * Applying a window always writes the same `defaultContextWindow` marker to
+ * every configured route, even when individual models are clamped below that
+ * request. Re-reading that common marker lets a newly mounted Settings page
+ * restore the user's choice without confusing it with the models' resolved
+ * (and legitimately mixed) capacities.
+ */
+export function commonRequestedWindow(entries: readonly RouteProfile[]): number | undefined {
+  if (entries.length === 0) return undefined
+  const requested = entries.map((entry) => {
+    const value = asProfile(entry.profile).defaultContextWindow
+    return typeof value === 'number' && Number.isSafeInteger(value) && value > 0
+      ? value
+      : undefined
+  })
+  if (requested.some(value => value === undefined)) return undefined
+  const windows = new Set(requested)
+  return windows.size === 1 ? requested[0] : undefined
+}
+
+/**
  * Overrides that name models the authoritative catalog no longer contains.
  * Applying must remove these entries because the adapter rejects the route,
  * but the UI also uses this list to disclose that cleanup before writing.

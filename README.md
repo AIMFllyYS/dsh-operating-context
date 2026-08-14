@@ -58,7 +58,7 @@ After install, open **Settings → 工作窗口** (between Models and Plugins). 
 
 ![Settings → 工作窗口](assets/ds-context.png)
 
-Pick a size and apply. Models, the usage ring, and official auto-compact follow through the settings event.
+Pick a size and apply. Models, the usage ring, and official auto-compact follow through the settings event. Leaving and reopening this Settings section restores the common saved choice from each route's `defaultContextWindow`; per-model native clamps remain visible underneath and do not erase that choice.
 
 An apply can span more than one settings namespace, while Harness mutations
 are namespace-scoped rather than one cross-namespace transaction. If a later
@@ -128,6 +128,27 @@ This is why writing `defaultContextWindow` alone has no effect on a route whose 
 A model is never given a window larger than it can hold. The ceiling is read from the multi-provider adapter's installed catalog through `llm.discoverModels`, which for a catalog route answers from local data with no network request and no credential. For a hand-declared route, or for `llm-deepseek` (which registers no discovery), the ceiling is unknown and the page says so rather than guessing.
 
 When the chosen window is at or below a model's ceiling, no override is written and any earlier one is removed — the catalog value is already correct. That is what makes applying idempotent, and what makes choosing a larger window restore native capacities.
+
+## Provider compatibility
+
+The algorithm does not contain a provider-name allow-list. OpenCode, Kimi
+Coding, Anthropic, and other installed `llm-pi-ai` catalog routes use the same
+Harness directory contract, local catalog ceilings, and
+`defaultContextWindow`/`modelOverrides` planning. A newly added catalog
+provider therefore participates without a plugin-specific branch.
+
+A hand-declared or private gateway is deliberately not queried when this page
+opens: discovery may contact its endpoint and require a credential. If it has
+an explicit `models` list, the plugin updates each row's `contextWindow` while
+preserving endpoint, protocol, credential, names, output limits, and unknown
+metadata. Without a list it writes only `defaultContextWindow`. Such a route's
+native ceilings remain unknown and the UI says so rather than guessing.
+
+An entirely new independent Harness adapter is compatible when its advertised
+settings route follows this same capacity shape. The current Harness directory
+does not expose a generic capability flag for arbitrary future schemas, so the
+plugin cannot promise model-level clamping for an adapter that does not expose
+`defaultContextWindow`, `models`, or catalog discovery.
 
 ## Develop
 

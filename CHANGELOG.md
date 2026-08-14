@@ -4,6 +4,29 @@ All notable changes to this project are documented here. The project follows
 the version declared in `package.json`; a dated version heading records the
 repository state prepared for that release.
 
+## 0.1.0-rc.3 - 2026-08-14
+
+### Fixed
+
+- Restore the saved window selection when the Settings section remounts. The
+  page now keeps the common requested `defaultContextWindow` separate from the
+  model windows that were legitimately clamped to smaller native ceilings, so
+  a 400K choice remains selected while 256K and 128K models still report their
+  real limits.
+- Restore non-preset saved values through the Custom input without inventing a
+  choice when routes have missing or conflicting window markers.
+
+### Compatibility
+
+- Add provider-contract regressions for the shipped OpenCode, Kimi Coding, and
+  Anthropic catalog routes. Planning follows Harness `settingsNs`,
+  `settingsPath`, and `declared` metadata rather than a provider allow-list.
+- Verify that a hand-declared Anthropic-compatible gateway keeps its endpoint,
+  protocol, credential reference, model names, output limits, and unknown
+  fields while explicit model windows are updated. Remote discovery remains
+  disabled for hand-declared routes, whose native ceilings are unknown.
+- The suite now contains 39 passing tests.
+
 ## 0.1.0-rc.2 - 2026-08-14
 
 ### Fixed

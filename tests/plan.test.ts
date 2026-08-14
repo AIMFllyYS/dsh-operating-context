@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { effectiveWindows, obsoleteOverrideIds, planRoute, type RouteProfile } from '../src/client/plan.ts'
+import {
+  commonRequestedWindow,
+  effectiveWindows,
+  obsoleteOverrideIds,
+  planRoute,
+  type RouteProfile,
+} from '../src/client/plan.ts'
 import type { DiscoveredModel, ProviderTarget } from '../src/client/api.ts'
 
 function route(settingsNs: string, settingsPath: string[], declared?: boolean): ProviderTarget {
@@ -217,4 +223,116 @@ test('effectiveWindows falls back to the route default alone', () => {
     ceilingsKnown: false,
     profile: { apiKeyEnv: 'DEMO_KEY' },
   })), [])
+})
+
+test('catalog planning is identical for OpenCode, Kimi Coding, and Anthropic', () => {
+  for (const provider of ['opencode', 'kimi-coding', 'anthropic']) {
+    const profile: RouteProfile = {
+      route: {
+        provider,
+        displayName: provider,
+        settingsNs: 'llm-pi-ai',
+        settingsPath: ['providers', provider],
+        active: true,
+        declared: false,
+      },
+      profile: {
+        apiKeyEnv: `${provider.toUpperCase().replaceAll('-', '_')}_API_KEY`,
+        defaultContextWindow: 1_000_000,
+      },
+      discovered: [
+        { id: `${provider}-large`, contextWindow: 1_000_000 },
+        { id: `${provider}-small`, contextWindow: 200_000 },
+      ],
+      ceilingsKnown: true,
+    }
+
+    assert.deepEqual(planRoute(profile, 400_000), [
+      {
+        op: 'set',
+        path: ['providers', provider, 'defaultContextWindow'],
+        value: 400_000,
+      },
+      {
+        op: 'set',
+        path: ['providers', provider, 'modelOverrides', `${provider}-large`, 'contextWindow'],
+        value: 400_000,
+      },
+    ], `${provider} should be planned from its route metadata, not a provider allow-list`)
+  }
+})
+
+test('an unknown hand-declared provider preserves its endpoint and model metadata', () => {
+  const profile: RouteProfile = {
+    route: {
+      provider: 'private-anthropic-gateway',
+      displayName: 'Private Anthropic Gateway',
+      settingsNs: 'llm-pi-ai',
+      settingsPath: ['providers', 'private-anthropic-gateway'],
+      active: true,
+      declared: true,
+    },
+    profile: {
+      api: 'anthropic-messages',
+      apiKeyEnv: 'PRIVATE_ANTHROPIC_KEY',
+      baseURL: 'https://gateway.example/v1',
+      models: [
+        { id: 'claude-private-large', name: 'Private Large', contextWindow: 800_000, maxTokens: 64_000 },
+        { id: 'claude-private-small', name: 'Private Small', maxTokens: 8_000 },
+      ],
+    },
+    discovered: [],
+    ceilingsKnown: false,
+  }
+
+  assert.deepEqual(planRoute(profile, 400_000), [
+    {
+      op: 'set',
+      path: ['providers', 'private-anthropic-gateway', 'defaultContextWindow'],
+      value: 400_000,
+    },
+    {
+      op: 'set',
+      path: ['providers', 'private-anthropic-gateway', 'models'],
+      value: [
+        { id: 'claude-private-large', name: 'Private Large', contextWindow: 400_000, maxTokens: 64_000 },
+        { id: 'claude-private-small', name: 'Private Small', contextWindow: 400_000, maxTokens: 8_000 },
+      ],
+    },
+  ])
+})
+
+test('the common requested window survives legitimate per-model clamps', () => {
+  const routes = [
+    entry({
+      profile: {
+        defaultContextWindow: 400_000,
+        modelOverrides: { large: { contextWindow: 400_000 } },
+      },
+      discovered: [
+        { id: 'large', contextWindow: 1_000_000 },
+        { id: 'small', contextWindow: 256_000 },
+      ],
+    }),
+    entry({
+      settingsPath: ['providers', 'second'],
+      profile: { defaultContextWindow: 400_000 },
+      discovered: [{ id: 'small', contextWindow: 128_000 }],
+    }),
+  ]
+
+  assert.equal(commonRequestedWindow(routes), 400_000)
+  assert.deepEqual(routes.flatMap(route => effectiveWindows(route)), [400_000, 256_000, 128_000])
+})
+
+test('a saved choice is only inferred when every route carries the same valid marker', () => {
+  assert.equal(commonRequestedWindow([
+    entry({ profile: { defaultContextWindow: 400_000 } }),
+    entry({ settingsPath: ['providers', 'second'], profile: { defaultContextWindow: 256_000 } }),
+  ]), undefined)
+  assert.equal(commonRequestedWindow([
+    entry({ profile: { defaultContextWindow: 400_000 } }),
+    entry({ settingsPath: ['providers', 'second'], profile: {} }),
+  ]), undefined)
+  assert.equal(commonRequestedWindow([]), undefined)
 })

@@ -13,7 +13,7 @@ import {
 } from './api.ts'
 import { ceilingsOf, hasDiscoverableCeilings, routeKey } from './ceiling.ts'
 import { failureOf, WRITE_BLOCKED, type HostFailure } from './failure.ts'
-import { effectiveWindows, planRoute, type RouteProfile } from './plan.ts'
+import { commonRequestedWindow, effectiveWindows, planRoute, type RouteProfile } from './plan.ts'
 import { writeBatches } from './write.ts'
 
 /** One configured route the page can show and write. */
@@ -36,6 +36,8 @@ export interface OperatingContextState {
   applying: boolean
   writable: boolean
   routes: readonly RouteEntry[]
+  /** The common window requested on every route, restored across page mounts. */
+  selectedWindow: number | undefined
   /** The window every model already holds, when they all agree on one. */
   current: number | undefined
   /** Whether models currently disagree about the window in force. */
@@ -51,6 +53,7 @@ const INITIAL: OperatingContextState = {
   applying: false,
   writable: false,
   routes: [],
+  selectedWindow: undefined,
   current: undefined,
   mixed: false,
 }
@@ -119,6 +122,7 @@ export class OperatingContextStore {
         draft.error = null
         draft.writable = document.writable
         draft.routes = routes
+        draft.selectedWindow = commonRequestedWindow(routes)
         draft.current = windows.size === 1 ? [...windows][0] : undefined
         draft.mixed = windows.size > 1
       })

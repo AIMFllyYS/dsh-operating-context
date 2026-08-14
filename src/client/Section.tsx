@@ -65,10 +65,20 @@ function Loaded({ controller, useSnapshot, t }: OperatingContextInjected): React
   const current = state.current !== undefined && Number.isSafeInteger(state.current) && state.current > 0
     ? state.current
     : undefined
+  const followsSavedChoice = draft.preset === undefined && !draft.custom
+  const savedChoice = state.selectedWindow
+  const savedChoiceIsPreset = savedChoice !== undefined
+    && WINDOW_PRESETS.some(preset => preset.tokens === savedChoice)
+  const customActive = draft.custom
+    || (followsSavedChoice && savedChoice !== undefined && !savedChoiceIsPreset)
+  const customText = draft.custom
+    ? draft.customText
+    : (customActive && savedChoice !== undefined ? formatCapacity(savedChoice) : draft.customText)
   const target = draft.custom
     ? (typed !== undefined && Number.isSafeInteger(typed) && typed > 0 ? typed : undefined)
-    : draft.preset ?? current
+    : draft.preset ?? savedChoice ?? current
   const invalidCustom = draft.custom && draft.customText.trim().length > 0 && target === undefined
+  const displayedWindow = savedChoice ?? current
 
   const rows: { key: string; displayName: string; outcome: RouteOutcome | undefined }[]
     = state.routes.map(entry => ({
@@ -104,9 +114,9 @@ function Loaded({ controller, useSnapshot, t }: OperatingContextInjected): React
       <div className={styles.card}>
         <div className={styles.head}>
           <span className={styles.label}>{t('windowLabel')}</span>
-          {state.current === undefined ? null : (
+          {displayedWindow === undefined ? null : (
             <span className={styles.current}>
-              {fill(t('current'), { window: formatCapacity(state.current) })}
+              {fill(t('current'), { window: formatCapacity(displayedWindow) })}
             </span>
           )}
         </div>
@@ -116,28 +126,32 @@ function Loaded({ controller, useSnapshot, t }: OperatingContextInjected): React
           {WINDOW_PRESETS.map(preset => (
             <Pill
               key={preset.label}
-              active={!draft.custom && target === preset.tokens}
+              active={!customActive && target === preset.tokens}
               onClick={() => { changeDraft({ preset: preset.tokens, custom: false, customText: draft.customText }) }}
             >
               {preset.label}
             </Pill>
           ))}
           <Pill
-            active={draft.custom}
-            onClick={() => { changeDraft({ ...draft, custom: true }) }}
+            active={customActive}
+            onClick={() => {
+              changeDraft({ preset: undefined, custom: true, customText })
+            }}
           >
             {t('custom')}
           </Pill>
         </div>
 
-        {draft.custom ? (
+        {customActive ? (
           <div className={styles.custom}>
             <Input
-              value={draft.customText}
+              value={customText}
               placeholder={t('customPlaceholder')}
               aria-label={t('custom')}
               aria-invalid={invalidCustom}
-              onChange={(event) => { changeDraft({ ...draft, customText: event.target.value }) }}
+              onChange={(event) => {
+                changeDraft({ preset: undefined, custom: true, customText: event.target.value })
+              }}
             />
           </div>
         ) : null}
