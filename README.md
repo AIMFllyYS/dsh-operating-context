@@ -54,7 +54,11 @@ npx @deepseek-ai/dsh --profile web --dump-config   # look for a "# == dsh-operat
 npx @deepseek-ai/dsh web                           # still port 3080
 ```
 
-Open Settings → **工作窗口** (between Models and Plugins). Pick `256K` and apply. Models, the usage ring, and official auto-compact follow through the settings event.
+After install, open **Settings → 工作窗口** (between Models and Plugins). That page is this plugin:
+
+![Settings → 工作窗口](assets/ds-context.png)
+
+Pick a size and apply. Models, the usage ring, and official auto-compact follow through the settings event.
 
 Unload:
 
