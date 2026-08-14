@@ -22,14 +22,7 @@ A first-time user needs:
 npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context
 ```
 
-A git install fetches sources, not `lib/`. This package ships a self-contained `prepare` script that builds the published entries. pnpm ≥10 blocks that script until the consumer allows it, so the first `add` fails; copy the exact key it printed into the profile's `pnpm-workspace.yaml` (usually `~/.dsh/profiles/web/pnpm-workspace.yaml`):
-
-```yaml
-allowBuilds:
-  dsh-operating-context: true
-```
-
-Then re-run the same `add`. Pin a commit if you do not want a later push to change what runs:
+The repository ships reviewed, prebuilt `lib/` artifacts. Installation does not run package code or require an `allowBuilds` entry. Pin a commit if you do not want a later push to change what runs:
 
 ```sh
 npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context#<sha>
@@ -41,7 +34,7 @@ From a DeepSeek Harness source checkout, the same verbs go through `pnpm dsh` in
 pnpm dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context
 ```
 
-From this plugin's checkout (no `allowBuilds` needed):
+From this plugin's checkout:
 
 ```sh
 pnpm install
@@ -68,7 +61,7 @@ Unload:
 npx @deepseek-ai/dsh plugin --profile web remove dsh-operating-context
 ```
 
-Written values stay in `~/.dsh/settings.yaml`; removing the plugin does not revert them. Choosing the largest preset does, because that clears the overrides rather than writing a new number.
+Written values stay in `~/.dsh/settings.yaml`; removing the plugin does not revert them. When the chosen window reaches a catalog model's known native ceiling, this plugin removes its capacity override so the native value can take effect again. Unknown ceilings and explicit `models` lists cannot be reset that way.
 
 ## What it writes
 
@@ -100,3 +93,5 @@ pnpm build
 ```
 
 `src/index.ts` is a Host loader stub; all behavior is in the client bundle. `api.ts`, `capacity.ts`, `ceiling.ts`, and `plan.ts` are pure and carry the tests; `store.ts` and the components are the only files that touch platform modules.
+
+`lib/` is a committed distribution artifact. After changing `src/`, rebuild it and include the resulting `lib/index.js`, `lib/client.js`, and `lib/client.js.map` in the same commit. Consumers must never need an install-time build script.

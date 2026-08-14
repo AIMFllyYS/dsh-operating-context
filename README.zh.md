@@ -22,14 +22,7 @@ GitHub 话题：[`dsh-plugin`](https://github.com/topics/dsh-plugin)。
 npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context
 ```
 
-从 git 安装拿到的是**源码，不是 `lib/`**。本包提供自包含的 `prepare` 脚本，安装时会编出发布入口。pnpm ≥10 在使用方明确允许之前会拦住该脚本，所以第一次 `add` 几乎一定会失败；把 CLI 打印的那个键写进该 profile 的 `pnpm-workspace.yaml`（通常是 `~/.dsh/profiles/web/pnpm-workspace.yaml`）：
-
-```yaml
-allowBuilds:
-  dsh-operating-context: true
-```
-
-然后把同一条 `add` 再跑一遍。不想让后续推送悄悄改变正在运行的内容，就钉死 commit：
+仓库已经提交经过审查的预构建 `lib/` 产物。安装时不会执行本包代码，也不需要修改 `allowBuilds`。不想让后续推送悄悄改变正在运行的内容，就钉死 commit：
 
 ```sh
 npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context#<sha>
@@ -41,7 +34,7 @@ npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-con
 pnpm dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context
 ```
 
-从本插件的 checkout 安装（不需要 `allowBuilds`）：
+从本插件的 checkout 安装：
 
 ```sh
 pnpm install
@@ -68,7 +61,7 @@ npx @deepseek-ai/dsh web                           # 仍是 3080 端口
 npx @deepseek-ai/dsh plugin --profile web remove dsh-operating-context
 ```
 
-已经写入的值会留在 `~/.dsh/settings.yaml`；卸插件不会自动还原。选最大那一档会还原，因为它清掉的是覆盖，而不是再写一个新数字。
+已经写入的值会留在 `~/.dsh/settings.yaml`；卸插件不会自动还原。当所选窗口达到目录模型已知的原生上限时，本插件会清掉该模型的容量覆盖，让原生值重新生效。上限未知的路由和显式 `models` 列表不能这样还原。
 
 ## 它写什么
 
@@ -100,3 +93,5 @@ pnpm build
 ```
 
 `src/index.ts` 是 Host 侧的 loader stub；行为都在客户端 bundle 里。`api.ts`、`capacity.ts`、`ceiling.ts`、`plan.ts` 是纯逻辑并承担测试；只有 `store.ts` 和组件会碰到平台模块。
+
+`lib/` 是需要提交的分发产物。修改 `src/` 后必须重新构建，并在同一个 commit 中包含 `lib/index.js`、`lib/client.js` 和 `lib/client.js.map`。使用者不应再承担任何安装期构建。
