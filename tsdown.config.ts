@@ -105,7 +105,9 @@ export default defineConfig([
           minify: true,
         })
         const classMap = {}
-        for (const [local, exp] of Object.entries(cssExports ?? {})) classMap[local] = exp.name
+        const sortedExports = Object.entries(cssExports ?? {})
+          .sort(([left], [right]) => left.localeCompare(right))
+        for (const [local, exp] of sortedExports) classMap[local] = exp.name
         return [
           `const css = ${JSON.stringify(code.toString())};`,
           `const tagId = ${JSON.stringify(`${ID}/${basename(fileId)}`)};`,
