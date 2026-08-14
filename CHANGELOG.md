@@ -1,10 +1,10 @@
 # Changelog
 
 All notable changes to this project are documented here. The project follows
-the version declared in `package.json`; entries under **Unreleased** are present
-on the repository branch but are not a published-version claim.
+the version declared in `package.json`; a dated version heading records the
+repository state prepared for that release.
 
-## Unreleased
+## 0.1.0-rc.1 - 2026-08-14
 
 ### Fixed
 

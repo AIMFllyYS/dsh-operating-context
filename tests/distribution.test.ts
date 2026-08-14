@@ -12,6 +12,7 @@ async function text(path: string): Promise<string> {
 
 test('the installable package ships artifacts without lifecycle builds', async () => {
   const manifest = JSON.parse(await text('package.json')) as {
+    version?: string
     files?: string[]
     scripts?: Record<string, string>
     dsh?: { client?: { inject?: string[] } }
@@ -20,6 +21,7 @@ test('the installable package ships artifacts without lifecycle builds', async (
   for (const hook of ['preinstall', 'install', 'postinstall', 'prepare']) {
     assert.equal(manifest.scripts?.[hook], undefined, `${hook} must not run for consumers`)
   }
+  assert.match(await text('CHANGELOG.md'), new RegExp(`^## ${manifest.version?.replaceAll('.', '\\.')}(?: -|$)`, 'm'))
   assert.deepEqual(manifest.files, [
     'CHANGELOG.md',
     'lib/index.js',
