@@ -5,7 +5,7 @@
  * Page-wide facts live in the store; the only local state is the unsubmitted
  * choice, which nothing outside this component needs to read.
  */
-import { useState, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 import { Button, Input, Pill } from '@deepseek-ai/dsh-client-ui-primitives'
 import { formatCapacity, parseCapacity, WINDOW_PRESETS } from './capacity.ts'
 import { outcomeOf, type RouteOutcome } from './ceiling.ts'
@@ -51,7 +51,14 @@ export function OperatingContextSection(props: OperatingContextSectionProps): Re
 function Loaded({ controller, useSnapshot, t }: OperatingContextInjected): ReactNode {
   const state = useSnapshot(snapshot => snapshot)
   const [draft, setDraft] = useState<Draft>(NO_DRAFT)
-  if (state.status === 'idle') void controller.load()
+  useEffect(() => {
+    if (state.status === 'idle') void controller.load()
+  }, [controller, state.status])
+
+  const changeDraft = (next: Draft): void => {
+    controller.clearWriteFeedback()
+    setDraft(next)
+  }
 
   const typed = draft.custom ? parseCapacity(draft.customText) : undefined
   const target = draft.custom
@@ -102,14 +109,14 @@ function Loaded({ controller, useSnapshot, t }: OperatingContextInjected): React
             <Pill
               key={preset.label}
               active={!draft.custom && target === preset.tokens}
-              onClick={() => { setDraft({ preset: preset.tokens, custom: false, customText: draft.customText }) }}
+              onClick={() => { changeDraft({ preset: preset.tokens, custom: false, customText: draft.customText }) }}
             >
               {preset.label}
             </Pill>
           ))}
           <Pill
             active={draft.custom}
-            onClick={() => { setDraft({ ...draft, custom: true }) }}
+            onClick={() => { changeDraft({ ...draft, custom: true }) }}
           >
             {t('custom')}
           </Pill>
@@ -122,7 +129,7 @@ function Loaded({ controller, useSnapshot, t }: OperatingContextInjected): React
               placeholder={t('customPlaceholder')}
               aria-label={t('custom')}
               aria-invalid={invalidCustom}
-              onChange={(event) => { setDraft({ ...draft, customText: event.target.value }) }}
+              onChange={(event) => { changeDraft({ ...draft, customText: event.target.value }) }}
             />
           </div>
         ) : null}
@@ -159,6 +166,14 @@ function Loaded({ controller, useSnapshot, t }: OperatingContextInjected): React
         {state.savedWindow === null || state.savedWindow !== target ? null : (
           <p className={styles.saved} role="status" aria-live="polite">
             {fill(t('saved'), { window: formatCapacity(state.savedWindow) })}
+          </p>
+        )}
+        {state.partialWrite === null ? null : (
+          <p className={styles.notice} role="status" aria-live="polite">
+            {fill(t('partiallySaved'), {
+              applied: String(state.partialWrite.applied),
+              total: String(state.partialWrite.total),
+            })}
           </p>
         )}
         {state.writeFailure === null ? null : (

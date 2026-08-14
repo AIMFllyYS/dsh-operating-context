@@ -14,6 +14,7 @@ import {
 import { ceilingsOf, hasDiscoverableCeilings, routeKey } from './ceiling.ts'
 import { failureOf, WRITE_BLOCKED, type HostFailure } from './failure.ts'
 import { effectiveWindows, planRoute, type RouteProfile } from './plan.ts'
+import { writeBatches } from './write.ts'
 
 /** One configured route the page can show and write. */
 export interface RouteEntry extends RouteProfile {
@@ -30,6 +31,8 @@ export interface OperatingContextState {
   writeFailure: HostFailure | null
   /** The window written by the last successful apply. */
   savedWindow: number | null
+  /** A write that changed some settings batches before a later batch failed. */
+  partialWrite: { applied: number; total: number } | null
   applying: boolean
   writable: boolean
   routes: readonly RouteEntry[]
@@ -44,6 +47,7 @@ const INITIAL: OperatingContextState = {
   error: null,
   writeFailure: null,
   savedWindow: null,
+  partialWrite: null,
   applying: false,
   writable: false,
   routes: [],
@@ -137,6 +141,17 @@ export class OperatingContextStore {
     void this.load()
   }
 
+  /** Dismiss feedback that belongs to an earlier, now-abandoned choice. */
+  clearWriteFeedback(): void {
+    const snapshot = this.store.getSnapshot()
+    if (snapshot.savedWindow === null && snapshot.writeFailure === null && snapshot.partialWrite === null) return
+    this.store.update((draft) => {
+      draft.savedWindow = null
+      draft.writeFailure = null
+      draft.partialWrite = null
+    })
+  }
+
   /**
    * Put every configured route under one window, then reload so the page shows
    * what the adapter resolved rather than what was requested.
@@ -148,9 +163,11 @@ export class OperatingContextStore {
       draft.applying = true
       draft.writeFailure = null
       draft.savedWindow = null
+      draft.partialWrite = null
     })
+    let attemptedWrite = false
     try {
-      if (!Number.isInteger(target) || target <= 0) {
+      if (!Number.isSafeInteger(target) || target <= 0) {
         throw new CodedError('window must be a positive integer', WRITE_BLOCKED.invalidWindow)
       }
       const document = unwrap(await this.api.settings.describe({}))
@@ -158,18 +175,45 @@ export class OperatingContextStore {
         throw new CodedError('the settings document is read-only', WRITE_BLOCKED.readOnly)
       }
       const namespaces = new Map(document.namespaces.map(view => [view.ns, view]))
-      for (const { ns, ops, revision } of this.groupOps(namespaces, target)) {
-        unwrap(await this.api.settings.mutate({ ns, ops, expectedRevision: revision }))
+      const groups = this.groupOps(namespaces, target)
+      attemptedWrite = true
+      const result = await writeBatches(
+        groups.map(group => ({ ns: group.ns, payload: group })),
+        async ({ payload: { ns, ops, revision } }) => {
+          unwrap(await this.api.settings.mutate({ ns, ops, expectedRevision: revision }))
+        },
+      )
+      if (!result.ok) {
+        // The first batch can fail because another writer committed and caused
+        // an invalidation while `applying` suppressed the pushed reload.
+        await this.load()
+        this.store.update((draft) => {
+          draft.applying = false
+          draft.writeFailure = failureOf(result.reason)
+          draft.partialWrite = result.applied > 0
+            ? { applied: result.applied, total: result.total }
+            : null
+        })
+        return
       }
+      // A pushed invalidation is deliberately ignored while a write is in
+      // flight. This explicit read is therefore the one convergence path for
+      // both single- and multi-namespace writes.
+      await this.load()
       this.store.update((draft) => {
         draft.applying = false
         draft.savedWindow = target
+        draft.partialWrite = null
       })
-      await this.load()
     } catch (reason: unknown) {
+      const failure = failureOf(reason)
+      // A synchronous host/client failure may still happen after a write was
+      // attempted. Re-read because its pushed invalidation was suppressed.
+      if (attemptedWrite) await this.load()
       this.store.update((draft) => {
         draft.applying = false
-        draft.writeFailure = failureOf(reason)
+        draft.writeFailure = failure
+        draft.partialWrite = null
       })
     }
   }

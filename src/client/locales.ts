@@ -35,6 +35,7 @@ export const zh = {
   apply: '应用到全部服务',
   applying: '正在应用…',
   saved: '已应用 {window}。新的对话会立即使用这个窗口。',
+  partiallySaved: '已完成 {applied}/{total} 个写入批次，其余未完成。页面已经重新读取实际状态。',
 
   loadFailed: '无法读取模型服务。',
   writeFailed: '应用失败。',
@@ -73,6 +74,7 @@ export const en = {
   apply: 'Apply to all services',
   applying: 'Applying…',
   saved: 'Applied {window}. New conversations use it right away.',
+  partiallySaved: 'Applied {applied} of {total} write batches; the rest did not finish. The page has reloaded the actual state.',
 
   loadFailed: 'Could not read model services.',
   writeFailed: 'Could not apply.',
