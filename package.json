@@ -1,6 +1,6 @@
 {
   "name": "dsh-operating-context",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.2",
   "description": "DeepSeek Harness settings page: cap every configured model service to a working context window, clamped to what each model can actually hold",
   "license": "MIT",
   "homepage": "https://github.com/AIMFllyYS/dsh-operating-context",

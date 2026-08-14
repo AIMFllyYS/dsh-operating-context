@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The project follows
 the version declared in `package.json`; a dated version heading records the
 repository state prepared for that release.
 
-## 0.1.0-rc.1 - 2026-08-14
+## 0.1.0-rc.2 - 2026-08-14
 
 ### Fixed
 
