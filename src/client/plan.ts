@@ -66,6 +66,19 @@ function ceilingMap(entry: RouteProfile): ReadonlyMap<string, number> {
 }
 
 /**
+ * Overrides that name models the authoritative catalog no longer contains.
+ * Applying must remove these entries because the adapter rejects the route,
+ * but the UI also uses this list to disclose that cleanup before writing.
+ */
+export function obsoleteOverrideIds(entry: RouteProfile): string[] {
+  if (!entry.ceilingsKnown || modelRows(entry.profile) !== undefined) return []
+  const described = new Set(entry.discovered.map(model => model.id))
+  return Object.keys(overrides(entry.profile) ?? {})
+    .filter(id => !described.has(id))
+    .sort((left, right) => left.localeCompare(right))
+}
+
+/**
  * The windows a route's models hold right now, after the same precedence the
  * adapter applies. Reading the resolved value rather than the raw setting is
  * what keeps the page from reporting a number that is written but inert.
@@ -139,17 +152,13 @@ export function planRoute(entry: RouteProfile, target: number): PathOp[] {
       : { op: 'unset', path: at('modelOverrides', id, 'contextWindow') })
   }
 
-  if (entry.ceilingsKnown) {
-    const described = new Set(entry.discovered.map(model => model.id))
-    for (const id of Object.keys(overrides(entry.profile) ?? {})) {
-      if (described.has(id)) continue
-      // An override naming a model the catalog does not describe is refused
-      // outright, and that refusal takes the whole route down with it — every
-      // other field on the entry included. A catalog upgrade that drops a model
-      // is how a profile ends up here, so clearing the dead entry is what lets
-      // the route load and be written again.
-      ops.push({ op: 'unset', path: at('modelOverrides', id) })
-    }
+  for (const id of obsoleteOverrideIds(entry)) {
+    // An override naming a model the catalog does not describe is refused
+    // outright, and that refusal takes the whole route down with it — every
+    // other field on the entry included. A catalog upgrade that drops a model
+    // is how a profile ends up here, so clearing the dead entry is what lets
+    // the route load and be written again.
+    ops.push({ op: 'unset', path: at('modelOverrides', id) })
   }
   return ops
 }

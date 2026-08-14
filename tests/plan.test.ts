@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { effectiveWindows, planRoute, type RouteProfile } from '../src/client/plan.ts'
+import { effectiveWindows, obsoleteOverrideIds, planRoute, type RouteProfile } from '../src/client/plan.ts'
 import type { DiscoveredModel, ProviderTarget } from '../src/client/api.ts'
 
 function route(settingsNs: string, settingsPath: string[], declared?: boolean): ProviderTarget {
@@ -89,7 +89,7 @@ test('removing a capacity override keeps the other fields on that entry', () => 
 })
 
 test('an override the catalog no longer describes is cleared, not left to wedge the route', () => {
-  const ops = planRoute(entry({
+  const profile = entry({
     profile: {
       modelOverrides: {
         big: { contextWindow: 400_000 },
@@ -97,7 +97,10 @@ test('an override the catalog no longer describes is cleared, not left to wedge 
       },
     },
     discovered: [{ id: 'big', contextWindow: 1_000_000 }],
-  }), 400_000)
+  })
+  const ops = planRoute(profile, 400_000)
+
+  assert.deepEqual(obsoleteOverrideIds(profile), ['retired'])
 
   assert.deepEqual(ops, [
     { op: 'set', path: ['providers', 'demo', 'defaultContextWindow'], value: 400_000 },
@@ -107,11 +110,14 @@ test('an override the catalog no longer describes is cleared, not left to wedge 
 })
 
 test('a route whose ceilings are unknown keeps its overrides untouched', () => {
-  const ops = planRoute(entry({
+  const profile = entry({
     declared: true,
     ceilingsKnown: false,
     profile: { modelOverrides: { anything: { contextWindow: 400_000 } } },
-  }), 200_000)
+  })
+  const ops = planRoute(profile, 200_000)
+
+  assert.deepEqual(obsoleteOverrideIds(profile), [])
 
   assert.deepEqual(ops, [
     { op: 'set', path: ['providers', 'demo', 'defaultContextWindow'], value: 200_000 },

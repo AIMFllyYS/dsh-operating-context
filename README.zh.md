@@ -8,6 +8,10 @@
 
 GitHub 话题：[`dsh-plugin`](https://github.com/topics/dsh-plugin)。
 
+兼容性基线：已按 DeepSeek Harness `0.1.0-rc.5`
+（`47f943859bef60e4160492346772ded9b24f765a`，2026-08-14）核对。Harness
+的插件接口目前仍处于候选发布阶段，升级到更新版本时应重新构建并测试本包。
+
 ## 安装
 
 这是一个 DeepSeek Harness **组合包**。它不能单独运行；除非你自己把 `dsh` 放进 PATH，否则系统里没有这个命令。官方入口是 `npx @deepseek-ai/dsh`。
@@ -62,6 +66,9 @@ npx @deepseek-ai/dsh plugin --profile web remove dsh-operating-context
 ```
 
 已经写入的值会留在 `~/.dsh/settings.yaml`；卸插件不会自动还原。当所选窗口达到目录模型已知的原生上限时，本插件会清掉该模型的容量覆盖，让原生值重新生效。上限未知的路由和显式 `models` 列表不能这样还原。
+
+如果权威目录已经不存在某个模型，但配置里还留着它的 `modelOverrides`
+条目，适配器会拒绝这个旧条目，并可能导致整条路由不可用。页面会在应用前明确显示将清理多少个这类条目；目录上限未知时绝不会执行这项清理。
 
 ## 它写什么
 

@@ -32,7 +32,8 @@ export function parseCapacity(text: string): number | undefined {
   const scale = suffix === 'k' || suffix === 'm' ? CAPACITY_SCALE[suffix] : 1
   const scaled = Number(match[1] ?? '0') * scale
   const rounded = Math.round(scaled)
-  return Math.abs(scaled - rounded) < 1e-6 ? rounded : scaled
+  if (Math.abs(scaled - rounded) >= 1e-6) return scaled
+  return Number.isSafeInteger(rounded) ? rounded : Number.NaN
 }
 
 /**
@@ -43,7 +44,7 @@ export function parseCapacity(text: string): number | undefined {
  * @returns the field text.
  */
 export function formatCapacity(value: number): string {
-  if (!Number.isInteger(value) || value <= 0) return String(value)
+  if (!Number.isSafeInteger(value) || value <= 0) return String(value)
   if (value % CAPACITY_SCALE.m === 0) return `${String(value / CAPACITY_SCALE.m)}M`
   if (value % CAPACITY_SCALE.k === 0) return `${String(value / CAPACITY_SCALE.k)}K`
   return String(value)

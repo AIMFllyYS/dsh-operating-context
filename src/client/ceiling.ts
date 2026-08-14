@@ -42,7 +42,7 @@ export function ceilingsOf(models: readonly DiscoveredModel[]): Map<string, numb
   for (const model of models) {
     const { contextWindow } = model
     if (contextWindow === undefined) continue
-    if (!Number.isInteger(contextWindow) || contextWindow <= 0) continue
+    if (!Number.isSafeInteger(contextWindow) || contextWindow <= 0) continue
     ceilings.set(model.id, contextWindow)
   }
   return ceilings

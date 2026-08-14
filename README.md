@@ -8,6 +8,11 @@ It does **not** mount a second compaction engine, wrap `resolveModel`, or patch 
 
 GitHub topic: [`dsh-plugin`](https://github.com/topics/dsh-plugin).
 
+Compatibility baseline: reviewed against DeepSeek Harness `0.1.0-rc.5`
+(`47f943859bef60e4160492346772ded9b24f765a`, 2026-08-14). The Harness plugin
+surface is still release-candidate software, so rebuild and test this package
+when moving to a newer Harness release.
+
 ## Install
 
 This is a DeepSeek Harness **bundle**. It does not run on its own, and there is no global `dsh` command unless you put one on PATH. Official Harness entry is `npx @deepseek-ai/dsh`.
@@ -62,6 +67,11 @@ npx @deepseek-ai/dsh plugin --profile web remove dsh-operating-context
 ```
 
 Written values stay in `~/.dsh/settings.yaml`; removing the plugin does not revert them. When the chosen window reaches a catalog model's known native ceiling, this plugin removes its capacity override so the native value can take effect again. Unknown ceilings and explicit `models` lists cannot be reset that way.
+
+If an authoritative catalog no longer contains a model that still has a
+`modelOverrides` entry, the adapter rejects that stale entry and can take down
+the whole route. The page reports how many such entries an apply will remove;
+the removal is never attempted when the catalog is unknown.
 
 ## What it writes
 

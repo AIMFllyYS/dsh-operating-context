@@ -15,6 +15,7 @@ test('parseCapacity matches the official Models spelling', () => {
   assert.equal(Number.isInteger(parseCapacity('1.5M')), true)
   assert.equal(Number.isNaN(parseCapacity('abc')), true)
   assert.equal(Number.isNaN(parseCapacity('1G')), true)
+  assert.equal(Number.isNaN(parseCapacity('9007199254741K')), true)
 })
 
 test('formatCapacity round-trips K/M spellings', () => {

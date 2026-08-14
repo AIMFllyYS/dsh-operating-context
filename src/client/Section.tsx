@@ -11,6 +11,7 @@ import { formatCapacity, parseCapacity, WINDOW_PRESETS } from './capacity.ts'
 import { outcomeOf, type RouteOutcome } from './ceiling.ts'
 import { writeFailureText } from './failure.ts'
 import { fill, type OperatingContextKey } from './locales.ts'
+import { obsoleteOverrideIds } from './plan.ts'
 import { RouteRow } from './RouteRow.tsx'
 import styles from './Section.module.css'
 import type { SnapshotSelectorHook } from '@deepseek-ai/dsh-client-web-react'
@@ -61,9 +62,12 @@ function Loaded({ controller, useSnapshot, t }: OperatingContextInjected): React
   }
 
   const typed = draft.custom ? parseCapacity(draft.customText) : undefined
+  const current = state.current !== undefined && Number.isSafeInteger(state.current) && state.current > 0
+    ? state.current
+    : undefined
   const target = draft.custom
-    ? (typed !== undefined && Number.isInteger(typed) && typed > 0 ? typed : undefined)
-    : draft.preset ?? state.current
+    ? (typed !== undefined && Number.isSafeInteger(typed) && typed > 0 ? typed : undefined)
+    : draft.preset ?? current
   const invalidCustom = draft.custom && draft.customText.trim().length > 0 && target === undefined
 
   const rows: { key: string; displayName: string; outcome: RouteOutcome | undefined }[]
@@ -75,6 +79,10 @@ function Loaded({ controller, useSnapshot, t }: OperatingContextInjected): React
         : outcomeOf(target, entry.discovered, entry.ceilingsKnown),
     }))
   const downgraded = rows.reduce((total, row) => total + (row.outcome?.downgraded.length ?? 0), 0)
+  const obsoleteOverrides = state.routes.reduce(
+    (total, entry) => total + obsoleteOverrideIds(entry).length,
+    0,
+  )
 
   if (state.status === 'error') {
     return (
@@ -147,6 +155,11 @@ function Loaded({ controller, useSnapshot, t }: OperatingContextInjected): React
               count: String(downgraded),
               window: formatCapacity(target),
             })}
+          </p>
+        ) : null}
+        {obsoleteOverrides > 0 && target !== undefined ? (
+          <p className={styles.notice}>
+            {fill(t('cleanupNotice'), { count: String(obsoleteOverrides) })}
           </p>
         ) : null}
 
