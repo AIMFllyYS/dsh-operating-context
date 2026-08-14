@@ -1,0 +1,5 @@
+# One Loader row. The Host half contributes nothing; the row exists so the
+# client-module scanner reaches dsh.client and serves lib/client.js.
+- insert:
+    - id: operating-context
+      name: dsh-operating-context

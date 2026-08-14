@@ -1,0 +1,96 @@
+{
+  "name": "dsh-operating-context",
+  "version": "0.1.0",
+  "description": "DeepSeek Harness settings page: cap every configured model service to a working context window, clamped to what each model can actually hold",
+  "license": "MIT",
+  "homepage": "https://github.com/AIMFllyYS/dsh-operating-context",
+  "bugs": {
+    "url": "https://github.com/AIMFllyYS/dsh-operating-context/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AIMFllyYS/dsh-operating-context.git"
+  },
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/index.js",
+    "lib/client.js",
+    "cordis.patch.yml"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-locale",
+        "@deepseek-ai/dsh-client-ui-settings",
+        "@deepseek-ai/dsh-client-ui-primitives",
+        "@deepseek-ai/dsh-client-web-react",
+        "@deepseek-ai/dsh-client-schema-form",
+        "@deepseek-ai/dsh-api-remotes"
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "prepare": "node scripts/prepare.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/capacity.test.ts tests/ceiling.test.ts tests/failure.test.ts tests/locales.test.ts tests/plan.test.ts"
+  },
+  "engines": {
+    "node": "^22.19.0 || >=24.0.0"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "*",
+    "@deepseek-ai/dsh-api-remotes": "*",
+    "@deepseek-ai/dsh-client-locale": "*",
+    "@deepseek-ai/dsh-client-runtime": "*",
+    "@deepseek-ai/dsh-client-schema-form": "*",
+    "@deepseek-ai/dsh-client-ui-primitives": "*",
+    "@deepseek-ai/dsh-client-ui-settings": "*",
+    "@deepseek-ai/dsh-client-ui-slots": "*",
+    "@deepseek-ai/dsh-client-web-react": "*",
+    "react": "^18.2.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/cordis": { "optional": true },
+    "@deepseek-ai/dsh-api-remotes": { "optional": true },
+    "@deepseek-ai/dsh-client-locale": { "optional": true },
+    "@deepseek-ai/dsh-client-runtime": { "optional": true },
+    "@deepseek-ai/dsh-client-schema-form": { "optional": true },
+    "@deepseek-ai/dsh-client-ui-primitives": { "optional": true },
+    "@deepseek-ai/dsh-client-ui-settings": { "optional": true },
+    "@deepseek-ai/dsh-client-ui-slots": { "optional": true },
+    "@deepseek-ai/dsh-client-web-react": { "optional": true },
+    "react": { "optional": true }
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.0",
+    "@types/react": "^18.3.12",
+    "lightningcss": "^1.32.0",
+    "tsdown": "^0.22.2",
+    "typescript": "^5.9.2"
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "ignoreMissing": [
+        "@deepseek-ai/*",
+        "react"
+      ]
+    }
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness"
+  ]
+}
