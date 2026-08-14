@@ -8,13 +8,19 @@ GitHub topic: [`dsh-plugin`](https://github.com/topics/dsh-plugin).
 
 ## Install
 
-This is a **bundle** (`dsh.bundle`). Install it into the `web` profile:
+This is a DeepSeek Harness **bundle**. It does not run on its own, and there is no global `dsh` command unless you put one on PATH. Official Harness entry is `npx @deepseek-ai/dsh`.
+
+A first-time user needs:
+
+1. [Node.js](https://nodejs.org/) `^22.19.0` or `>=24`
+2. [pnpm](https://pnpm.io/installation) on PATH (`corepack enable` is enough; `dsh plugin` forwards to pnpm)
+3. Then the commands below. First `npx @deepseek-ai/dsh web` also creates the `web` profile.
 
 ```sh
-dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context
+npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context
 ```
 
-A git install fetches sources, not `lib/`. This package ships a self-contained `prepare` script that builds the published entries. pnpm ≥10 blocks that script until the consumer allows it, so the first `add` fails; copy the exact key it printed into the profile's `pnpm-workspace.yaml`:
+A git install fetches sources, not `lib/`. This package ships a self-contained `prepare` script that builds the published entries. pnpm ≥10 blocks that script until the consumer allows it, so the first `add` fails; copy the exact key it printed into the profile's `pnpm-workspace.yaml` (usually `~/.dsh/profiles/web/pnpm-workspace.yaml`):
 
 ```yaml
 allowBuilds:
@@ -24,22 +30,28 @@ allowBuilds:
 Then re-run the same `add`. Pin a commit if you do not want a later push to change what runs:
 
 ```sh
-dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context#<sha>
+npx @deepseek-ai/dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context#<sha>
 ```
 
-From a local checkout (no `allowBuilds` needed):
+From a DeepSeek Harness source checkout, the same verbs go through `pnpm dsh` instead of `npx`:
+
+```sh
+pnpm dsh plugin --profile web add github:AIMFllyYS/dsh-operating-context
+```
+
+From this plugin's checkout (no `allowBuilds` needed):
 
 ```sh
 pnpm install
 pnpm build
-dsh plugin --profile web add .
+npx @deepseek-ai/dsh plugin --profile web add .
 ```
 
 Confirm the layer, then start the Web UI:
 
 ```sh
-dsh --profile web --dump-config   # look for a "# == dsh-operating-context" layer
-dsh web                           # still port 3080
+npx @deepseek-ai/dsh --profile web --dump-config   # look for a "# == dsh-operating-context" layer
+npx @deepseek-ai/dsh web                           # still port 3080
 ```
 
 Open Settings → **工作窗口** (between Models and Plugins). Pick `256K` and apply. Models, the usage ring, and official auto-compact follow through the settings event.
@@ -47,7 +59,7 @@ Open Settings → **工作窗口** (between Models and Plugins). Pick `256K` and
 Unload:
 
 ```sh
-dsh plugin --profile web remove dsh-operating-context
+npx @deepseek-ai/dsh plugin --profile web remove dsh-operating-context
 ```
 
 Written values stay in `~/.dsh/settings.yaml`; removing the plugin does not revert them. Choosing the largest preset does, because that clears the overrides rather than writing a new number.
